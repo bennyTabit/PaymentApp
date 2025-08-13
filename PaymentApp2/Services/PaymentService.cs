@@ -17,6 +17,7 @@ public class PaymentService : IPaymentService
     public async Task<IEnumerable<PaymentResponseDto>> GetAllPaymentsAsync()
     {
         var payments = await _context.Payments
+            .AsNoTracking()
             .OrderBy(p => p.DueDate)
             .ToListAsync();
             
@@ -25,9 +26,11 @@ public class PaymentService : IPaymentService
     
     public async Task<IEnumerable<PaymentResponseDto>> GetUpcomingPaymentsAsync(int days = 30)
     {
-        var cutoffDate = DateTime.Today.AddDays(days);
+        var today = DateTime.Today;
+        var cutoffDate = today.AddDays(days);
         var payments = await _context.Payments
-            .Where(p => !p.PaidDate.HasValue && p.DueDate <= cutoffDate)
+            .AsNoTracking()
+            .Where(p => !p.PaidDate.HasValue && p.DueDate >= today && p.DueDate <= cutoffDate)
             .OrderBy(p => p.DueDate)
             .ToListAsync();
             
@@ -37,6 +40,7 @@ public class PaymentService : IPaymentService
     public async Task<IEnumerable<PaymentResponseDto>> GetOverduePaymentsAsync()
     {
         var payments = await _context.Payments
+            .AsNoTracking()
             .Where(p => !p.PaidDate.HasValue && p.DueDate < DateTime.Today)
             .OrderBy(p => p.DueDate)
             .ToListAsync();
@@ -46,9 +50,11 @@ public class PaymentService : IPaymentService
     
     public async Task<IEnumerable<PaymentResponseDto>> GetDueSoonPaymentsAsync(int days = 7)
     {
-        var cutoffDate = DateTime.Today.AddDays(days);
+        var today = DateTime.Today;
+        var cutoffDate = today.AddDays(days);
         var payments = await _context.Payments
-            .Where(p => !p.PaidDate.HasValue && p.DueDate <= cutoffDate && p.DueDate >= DateTime.Today)
+            .AsNoTracking()
+            .Where(p => !p.PaidDate.HasValue && p.DueDate <= cutoffDate && p.DueDate >= today)
             .OrderBy(p => p.DueDate)
             .ToListAsync();
             
@@ -72,7 +78,9 @@ public class PaymentService : IPaymentService
     
     public async Task<PaymentResponseDto?> GetPaymentByIdAsync(int id)
     {
-        var payment = await _context.Payments.FindAsync(id);
+        var payment = await _context.Payments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id);
         return payment != null ? MapToResponseDto(payment) : null;
     }
     
@@ -146,22 +154,35 @@ public class PaymentService : IPaymentService
     
     public async Task<PaymentSummaryDto> GetPaymentSummaryAsync()
     {
-        var allPayments = await _context.Payments.ToListAsync();
-        var paidPayments = allPayments.Where(p => p.PaidDate.HasValue);
-        var unpaidPayments = allPayments.Where(p => !p.PaidDate.HasValue);
-        var overduePayments = allPayments.Where(p => !p.PaidDate.HasValue && p.DueDate < DateTime.Today);
-        var dueSoonPayments = allPayments.Where(p => !p.PaidDate.HasValue && (p.DueDate - DateTime.Today).Days <= 7);
+        var today = DateTime.Today;
+        var soonCutoff = today.AddDays(7);
+
+        var totalPayments = await _context.Payments.AsNoTracking().CountAsync();
+
+        var paidQuery = _context.Payments.AsNoTracking().Where(p => p.PaidDate.HasValue);
+        var unpaidQuery = _context.Payments.AsNoTracking().Where(p => !p.PaidDate.HasValue);
+        var overdueQuery = _context.Payments.AsNoTracking().Where(p => !p.PaidDate.HasValue && p.DueDate < today);
+        var dueSoonQuery = _context.Payments.AsNoTracking().Where(p => !p.PaidDate.HasValue && p.DueDate >= today && p.DueDate <= soonCutoff);
+        
+        var paidCount = await paidQuery.CountAsync();
+        var unpaidCount = await unpaidQuery.CountAsync();
+        var overdueCount = await overdueQuery.CountAsync();
+        var dueSoonCount = await dueSoonQuery.CountAsync();
+
+        var totalAmountPaid = await paidQuery.SumAsync(p => (decimal?)p.Amount) ?? 0m;
+        var totalAmountDue = await unpaidQuery.SumAsync(p => (decimal?)p.Amount) ?? 0m;
+        var totalOverdueAmount = await overdueQuery.SumAsync(p => (decimal?)p.Amount) ?? 0m;
         
         return new PaymentSummaryDto
         {
-            TotalPayments = allPayments.Count,
-            PaidCount = paidPayments.Count(),
-            UnpaidCount = unpaidPayments.Count(),
-            OverdueCount = overduePayments.Count(),
-            DueSoonCount = dueSoonPayments.Count(),
-            TotalAmountPaid = paidPayments.Sum(p => p.Amount),
-            TotalAmountDue = unpaidPayments.Sum(p => p.Amount),
-            TotalOverdueAmount = overduePayments.Sum(p => p.Amount)
+            TotalPayments = totalPayments,
+            PaidCount = paidCount,
+            UnpaidCount = unpaidCount,
+            OverdueCount = overdueCount,
+            DueSoonCount = dueSoonCount,
+            TotalAmountPaid = totalAmountPaid,
+            TotalAmountDue = totalAmountDue,
+            TotalOverdueAmount = totalOverdueAmount
         };
     }
     

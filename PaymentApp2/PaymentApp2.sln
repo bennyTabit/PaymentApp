@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36327.8 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentApp2", "PaymentApp2.csproj", "{8C08A00E-CCA0-40B2-9420-F37D8275AC71}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8C08A00E-CCA0-40B2-9420-F37D8275AC71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C08A00E-CCA0-40B2-9420-F37D8275AC71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C08A00E-CCA0-40B2-9420-F37D8275AC71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C08A00E-CCA0-40B2-9420-F37D8275AC71}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {290216DA-7D12-459F-9734-21E7F9D5ED1B}
+	EndGlobalSection
+EndGlobal

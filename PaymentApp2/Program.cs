@@ -14,7 +14,10 @@ builder.Services.AddSwaggerGen();
 // Register EF Core DbContext with InMemory provider and the PaymentService
 builder.Services.AddDbContext<PaymentDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sql => sql.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null)
+    );
 });
 
 builder.Services.AddScoped<IPaymentService, PaymentService>();

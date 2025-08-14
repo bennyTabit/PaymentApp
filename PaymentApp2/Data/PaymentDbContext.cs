@@ -11,10 +11,35 @@ public class PaymentDbContext : DbContext
     }
 
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<User> Users { get; set; }
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlite("Data Source=payments.db");
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.UserName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
+
+            entity.HasData(
+                new User
+                {
+                    Id = 1,
+                    UserName = "john_doe",
+                    Email = "john@example.com"
+                }
+            );
+        });
 
         // Configure Payment entity
         modelBuilder.Entity<Payment>(entity =>
@@ -24,7 +49,11 @@ public class PaymentDbContext : DbContext
             entity.Property(e => e.Amount).HasPrecision(18, 2);
 
             entity.Property(e => e.Notes).HasMaxLength(500);
-            
+
+            entity.HasOne(p => p.User)
+                .WithMany(u => u.Payments)
+                .HasForeignKey(p => p.UserId);
+
             // Add some sample data
             entity.HasData(
                 new Payment
@@ -35,7 +64,8 @@ public class PaymentDbContext : DbContext
                     DueDate = DateTime.Today.AddDays(1),
                     IsRecurring = true,
                     RecurrenceType = RecurrenceType.Monthly,
-                    Notes = "Monthly rent payment"
+                    Notes = "Monthly rent payment",
+                    UserId = 1
                 },
                 new Payment
                 {
@@ -45,7 +75,8 @@ public class PaymentDbContext : DbContext
                     DueDate = DateTime.Today.AddDays(15),
                     IsRecurring = true,
                     RecurrenceType = RecurrenceType.Monthly,
-                    Notes = "Utility bill - account #12345"
+                    Notes = "Utility bill - account #12345",
+                    UserId = 1
                 },
                 new Payment
                 {
@@ -56,7 +87,8 @@ public class PaymentDbContext : DbContext
                     PaidDate = DateTime.Today.AddDays(-5),
                     IsRecurring = true,
                     RecurrenceType = RecurrenceType.Monthly,
-                    Notes = "Premium plan"
+                    Notes = "Premium plan",
+                    UserId = 1
                 },
                 new Payment
                 {
@@ -66,7 +98,8 @@ public class PaymentDbContext : DbContext
                     DueDate = DateTime.Today.AddDays(-5),
                     IsRecurring = false,
                     RecurrenceType = RecurrenceType.None,
-                    Notes = "Quarterly payment - due soon!"
+                    Notes = "Quarterly payment - due soon!",
+                    UserId = 1
                 },
                 new Payment
                 {
@@ -76,7 +109,8 @@ public class PaymentDbContext : DbContext
                     DueDate = DateTime.Today.AddDays(10),
                     IsRecurring = true,
                     RecurrenceType = RecurrenceType.Monthly,
-                    Notes = "Verizon - unlimited plan"
+                    Notes = "Verizon - unlimited plan",
+                    UserId = 1
                 }
             );
         });

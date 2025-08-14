@@ -28,6 +28,10 @@ public class Payment
     
     [StringLength(500)]
     public string? Notes { get; set; }
+
+    public int UserId { get; set; }
+
+    public User? User { get; set; }
     
     [NotMapped]
     public bool IsPaid => PaidDate.HasValue;

@@ -1,3 +1,7 @@
+using Microsoft.EntityFrameworkCore;
+using PaymentApp.Data;
+using PaymentApp.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -7,7 +11,19 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Register EF Core DbContext with InMemory provider and the PaymentService
+builder.Services.AddDbContext<PaymentDbContext>(options =>
+{
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sql => sql.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null)
+    );
+});
+
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

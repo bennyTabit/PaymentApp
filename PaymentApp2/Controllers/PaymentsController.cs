@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using PaymentApp.Models.DTOs;
 using PaymentApp.Services;
+using System.Security.Claims;
 
 namespace PaymentApp.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class PaymentsController : ControllerBase
     {
         private readonly IPaymentService _paymentService;
@@ -21,6 +24,7 @@ namespace PaymentApp.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PaymentResponseDto>>> GetAllPayments()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var payments = await _paymentService.GetAllPaymentsAsync();
             return Ok(payments);
         }
@@ -31,6 +35,7 @@ namespace PaymentApp.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<PaymentResponseDto>> GetPayment(int id)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var payment = await _paymentService.GetPaymentByIdAsync(id);
             if (payment == null)
                 return NotFound($"Payment with ID {id} not found");
@@ -44,6 +49,7 @@ namespace PaymentApp.Controllers
         [HttpPost]
         public async Task<ActionResult<PaymentResponseDto>> CreatePayment(CreatePaymentDto createDto)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -57,6 +63,7 @@ namespace PaymentApp.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult<PaymentResponseDto>> UpdatePayment(int id, UpdatePaymentDto updateDto)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -73,6 +80,7 @@ namespace PaymentApp.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeletePayment(int id)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var success = await _paymentService.DeletePaymentAsync(id);
             if (!success)
                 return NotFound($"Payment with ID {id} not found");
@@ -86,6 +94,7 @@ namespace PaymentApp.Controllers
         [HttpPost("{id}/mark-as-paid")]
         public async Task<ActionResult> MarkAsPaid(int id, MarkAsPaidDto markAsPaidDto)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var success = await _paymentService.MarkAsPaidAsync(id, markAsPaidDto);
             if (!success)
                 return NotFound($"Payment with ID {id} not found");
@@ -99,6 +108,7 @@ namespace PaymentApp.Controllers
         [HttpGet("upcoming")]
         public async Task<ActionResult<IEnumerable<PaymentResponseDto>>> GetUpcomingPayments([FromQuery] int days = 30)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var payments = await _paymentService.GetUpcomingPaymentsAsync(days);
             return Ok(payments);
         }
@@ -109,6 +119,7 @@ namespace PaymentApp.Controllers
         [HttpGet("overdue")]
         public async Task<ActionResult<IEnumerable<PaymentResponseDto>>> GetOverduePayments()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var payments = await _paymentService.GetOverduePaymentsAsync();
             return Ok(payments);
         }
@@ -119,6 +130,7 @@ namespace PaymentApp.Controllers
         [HttpGet("due-soon")]
         public async Task<ActionResult<IEnumerable<PaymentResponseDto>>> GetDueSoonPayments([FromQuery] int days = 7)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var payments = await _paymentService.GetDueSoonPaymentsAsync(days);
             return Ok(payments);
         }
@@ -129,6 +141,7 @@ namespace PaymentApp.Controllers
         [HttpGet("reminders")]
         public async Task<ActionResult<IEnumerable<PaymentResponseDto>>> GetReminders()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var payments = await _paymentService.GetRemindersAsync();
             return Ok(payments);
         }
@@ -139,6 +152,7 @@ namespace PaymentApp.Controllers
         [HttpGet("summary")]
         public async Task<ActionResult<PaymentSummaryDto>> GetPaymentSummary()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var summary = await _paymentService.GetPaymentSummaryAsync();
             return Ok(summary);
         }
